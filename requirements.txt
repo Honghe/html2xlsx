@@ -1,0 +1,4 @@
+xlsxwriter
+lxml
+pyside6
+pyinstaller

@@ -1,0 +1,7 @@
+*.xlsx
+.vscode/
+build/
+dist/
+__pycache__/
+output/
+*.log
