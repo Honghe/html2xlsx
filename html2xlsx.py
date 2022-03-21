@@ -208,18 +208,6 @@ class ParserWorker(QObject):
         self.html_path: str = html_path
         self.xlsx_path: str = xlsx_path
 
-        if os.path.exists(xlsx_path):
-            logger.info(f'remove {xlsx_path}')
-            os.remove(xlsx_path)
-
-        # Create a workbook and add a worksheet.
-        # https://xlsxwriter.readthedocs.io/working_with_memory.html
-        self.workbook = xlsxwriter.Workbook(
-            xlsx_path, {'constant_memory': True})
-        self.worksheet = self.workbook.add_worksheet()
-
-        self.parser = MyHTMLParser(self.write_row)
-
     def write_row(self, row, data):
         if QThread.currentThread().isInterruptionRequested():
             raise MyInterrupt('Interrupted')
@@ -231,6 +219,17 @@ class ParserWorker(QObject):
         encoding = 'utf-8'
         success = False
         try:
+            if os.path.exists(self.xlsx_path):
+                os.remove(self.xlsx_path)
+                logger.info(f'delete {self.xlsx_path}')
+
+            # Create a workbook and add a worksheet.
+            # https://xlsxwriter.readthedocs.io/working_with_memory.html
+            self.workbook = xlsxwriter.Workbook(
+                self.xlsx_path, {'constant_memory': True})
+            self.worksheet = self.workbook.add_worksheet()
+            self.parser = MyHTMLParser(self.write_row)
+
             with open(self.html_path, encoding='utf-8', errors='ignore') as f:
                 data = f.read().lower()
                 # 获取html文件的编码
@@ -252,16 +251,25 @@ class ParserWorker(QObject):
             self.msg.emit(
                 f'{"".join(traceback.format_exception(Exception, e, e.__traceback__))}')
         finally:
-            self.parser.close()
-            self.workbook.close()
+            self.finished.emit(success)
+
+            if hasattr(self, 'parser'):
+                self.parser.close()
+            if hasattr(self, 'workbook'):
+                self.workbook.close()
             if not success:
                 # 删除xlsx文件，要在`workbook.close()`之后
-                if os.path.exists(self.xlsx_path):
-                    os.remove(self.xlsx_path)
-            self.finished.emit(success)
+                os.remove(self.xlsx_path)
+
+
+def excepthook(exc_type, exc_value, exc_tb):
+    logger.error(
+        "".join(traceback.format_exception(exc_type, exc_value, exc_tb)))
 
 
 if __name__ == '__main__':
+    sys.excepthook = excepthook
+
     logger.info(f'args: {sys.argv}')
 
     app = QApplication(sys.argv)
