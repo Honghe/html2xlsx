@@ -5,6 +5,7 @@ Convert HTML Table to Excel xlsx via Python.
 ![](images/screenshot.png)
 
 ## Pack
+
 ```
 pyinstaller html2xlsx.spec -y
 ```
@@ -18,6 +19,7 @@ pyinstaller html2xlsx.spec -y
 - 保存：xlsxwriter
 
 ## 示例数据
+
 demo.html:
 
 ```html
@@ -61,8 +63,8 @@ from lxml import html
 url = 'demo.html'
 with open(url, encoding='utf-8') as f:
     for tbl in root.xpath('//table'):
-    	elements = tbl.xpath('.//tr/td//text()')
-    	print elements
+        elements = tbl.xpath('.//tr/td//text()')
+        print elements
 ```
 
 使用`etree.iterparse`解析(**SAX**, Simple API for XML)，流式加载逐步解析，原文件`.html`很大时可以节省内存：
@@ -157,3 +159,14 @@ worksheet = workbook.add_worksheet()
 worksheet.write(row, col, data)
 workbook.close()
 ```
+
+## Speed optimization
+
+test data: 20000 rows .html file.
+
+|                         | wall time/s |
+| ----------------------- | ----------- |
+| python html2xlsx.py     | 37          |
+| Nuitka                  | 53          |
+| nuitka --follow-imports | 42          |
+| pyarmor                 | 38          |
