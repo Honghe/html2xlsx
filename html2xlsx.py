@@ -3,6 +3,7 @@ import datetime
 import os
 import re
 import sys
+import time
 import traceback
 from html.parser import HTMLParser
 
@@ -99,6 +100,7 @@ class MainWindow(QMainWindow):
 
     def open_html_file(self, html_path):
         self.log_msg(f'open_html_file {html_path}')
+        time_start = time.time()
         xlsx_path = os.path.splitext(html_path)[0] + '.xlsx'
         self.html_path = html_path
         self.xlsx_path = xlsx_path
@@ -132,6 +134,7 @@ class MainWindow(QMainWindow):
         def thread_finished():
             self.setAcceptDrops(True)
             self.log_msg('thread finished')
+            self.log_msg(f'time elapsed {time.time() - time_start:.2f}s')
 
         def worker_finished(success: bool):
             if success:
